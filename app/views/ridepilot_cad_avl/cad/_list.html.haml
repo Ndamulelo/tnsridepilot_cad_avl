@@ -1,0 +1,89 @@
+:ruby
+  has_run = @runs.any?
+
+:css
+  .run_checkboxes .run_list {
+    font-weight: normal;
+    display: block;
+  }
+
+  .run_list input, .select_all input {
+    vertical-align: initial;
+  }
+
+  .toggle {
+    float: right;
+  }
+
+  .driver_chat.new_message {
+    color: red;
+  }
+%h3
+  Select Runs to Show:
+  %input#all_toggle{type: 'checkbox', 'data-toggle': 'toggle', 'data-on': 'All Runs', 'data-off': 'Incomplete Only', 'data-size': 'small', 'data-width': '125', checked: 'true'}
+.col-sm-12  
+  %span.select_all{style: (has_run ? "" : "display: none;")}
+    %input{type: 'checkbox'} 
+      %b Select All
+  %label#no_run_warning{style: (!has_run ? "" : "display: none;")}
+    - unless params[:cad] && params[:cad][:incomplete_runs_only] == 'true'
+      = "There are no runs for this day."
+    - else
+      = "There are no remaining incomplete runs for this day."
+  
+  = render 'run_checkboxes', runs: @runs, expanded_run_id: nil
+
+- if @runs.first.try(:date) == Date.today
+  :javascript
+    $(function() {
+      var run_ids = #{@runs.pluck(:id)};
+      run_ids.forEach(function(run_id) {
+        var callback = function(data) {
+          console.log(data);
+          var run_span = $('.run_list[data-run-id= ' + run_id + ']');
+          if(data.dismiss && #{current_user.id} == data.read_by_id) {
+            // Dismiss alert
+            if(data.message_id && run_span.attr('data-last-message-id') == data.message_id.toString()) {
+              run_span.find('.driver_chat').removeClass('new_message');
+            }
+          } else if(data.sender_id && data.sender_id != #{current_user.id}) {
+            run_span.attr('data-last-message-id', data.message_id);
+            run_span.find('.driver_chat').addClass('new_message');
+          }
+        };
+
+        create_chat_alert_channel(run_id, callback);
+      });
+    });
+
+:javascript
+  $(function() {
+    $(document).on('change', '.select_all input', function() {
+      if ($(this).is(':checked')) {
+        $('.run_list input').prop('checked', true).trigger('change');
+      } else {
+        $('.run_list input').prop('checked', false).trigger('change');
+      }
+    });
+
+    $('#all_toggle').change(function() { 
+      $('.select_all input').prop('checked', false).trigger('change');
+      if ($(this).prop('checked')){
+        reloadRuns(false);
+      }
+      else {
+        reloadRuns(true);
+      }
+    });
+
+    $(document).on('change', '.run_checkboxes input', function (){
+      var run_id = $(this).data('run-id');
+
+      if ($(this).is(':checked')) {
+        reloadRun(run_id, true);
+      } else {
+        removeRun(run_id);
+      }
+    });
+  });
+  

@@ -1,0 +1,77 @@
+:javascript
+  // store list of prior_path markers
+  var prior_path_lines = {};
+  
+  // draw run prior_path location on map
+  function drawPriorPath(run_id, path_data) {
+    if(!path_data || path_data.length == 0) {
+      return;
+    }
+
+    //path_data = multiDimensionalUnique(path_data);
+
+    renderLoadedPriorPath(run_id);
+
+    drawPriorPathPolyline(run_id, getLatLngs(path_data || []));
+  }
+
+
+  // Store snapped polyline returned by the snap-to-road service.
+  function getLatLngs(data) {
+    var coords = [];
+    for (var i = 0; i < data.length; i++) {
+      var latlng = new google.maps.LatLng(
+          data[i][0],
+          data[i][1]);
+      coords.push(latlng);
+    }
+
+    return coords;
+  }
+
+  function drawPriorPathPolyline(run_id, coords) {
+    var run_path = prior_path_lines[run_id];
+    if(!run_path) {
+      run_path = new google.maps.Polyline({
+        path: coords,
+        map: map,
+        zIndex: 1,
+        geodesic: true,
+        strokeColor: 'gray',
+        strokeOpacity: 0.7,
+        strokeWeight: 7,
+        icons: [{
+          repeat: '30px',
+          icon: {
+            path: google.maps.SymbolPath.FORWARD_OPEN_ARROW,
+            scale: 1,
+            fillOpacity: 0,
+            strokeColor: '#fff',
+            strokeWeight: 1,
+            strokeOpacity: 1
+          }
+        }]
+      });
+
+      prior_path_lines[run_id] = run_path;
+    } else {
+      var locCount = run_path.getPath().length;
+      coords.forEach(function(latlng) {
+        run_path.getPath().setAt(locCount - 1, latlng);
+        locCount ++;
+      });
+    }
+  }
+
+  function renderLoadedPriorPath(run_id) {
+    if(prior_path_lines[run_id]) {
+      prior_path_lines[run_id].setMap(map);
+    }
+  }
+
+  function removePriorPath(run_id) {
+    if(prior_path_lines[run_id]) {
+      prior_path_lines[run_id].setMap(null);
+      delete prior_path_lines[run_id];
+    }
+  }

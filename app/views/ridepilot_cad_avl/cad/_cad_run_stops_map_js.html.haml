@@ -1,0 +1,213 @@
+:javascript
+  // store list of stop markers
+  var stop_markers = {};
+
+  // cluster marker
+  var stopMarkerCluster;
+
+  // stop marker when mouse hovers on stop name in run stop list
+  var stopHoverMarker;
+  
+  // draw run stop location on map
+  function drawRunStop(itin_data, seq_number) {
+    if(!itin_data || itin_data.length == 0) {
+      return;
+    }
+
+    var itin_id = itin_data[0];
+    var lat = itin_data[1];
+    var lng = itin_data[2];
+    var run_id = itin_data[3];
+    var leg_flag = itin_data[4];
+    var stats_code = itin_data[5];
+
+    if(lat == null || lng == null) {
+      return;
+    }
+
+    // define marker 
+    var markerLabel = null;
+    if(seq_number != null) {
+      markerLabel = {
+        text: seq_number.toString(),
+        fontWeight: "bold",
+        fontSize: '12px',
+        color: 'white'
+      };
+    }
+    var marker = new google.maps.Marker({
+      position: {lat: lat, lng: lng},
+      icon: getIcon(leg_flag, 0.8),
+      label: markerLabel
+    });
+
+    if(stopMarkerCluster) {
+      stopMarkerCluster.addMarker(marker);
+    } else {
+      marker.setMap(map);
+    }
+
+    // save reference as need to hide marker
+    if(!stop_markers[run_id]) {
+      stop_markers[run_id] = [];
+    }
+    stop_markers[run_id].push(marker);
+
+    marker.addListener('spider_click', function() {
+      infoWindow.open(map, marker);
+      infoWindow.setContent('loading...');
+
+      marker.setIcon(getIcon(leg_flag, 1));
+
+      function restoreIcon() {
+        marker.setIcon(getIcon(leg_flag, 0.8)); 
+      }
+
+      //ajax request content
+      requestStopInfo(itin_id, restoreIcon);
+    });
+
+    if(infoWindow.getMap() && infoWindow.type == 'Stop' && infoWindow.itin_id == itin_id) {
+      // re-load info window
+      new google.maps.event.trigger( marker, 'spider_click' );
+    }
+  }
+
+  function getIcon(type, opacity) {
+    var icon;
+    switch(type) {
+      case 0:
+        // start 
+        icon = {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: 'white',
+          fillOpacity: opacity,
+          strokeWeight: 3,
+          scale: 5
+        };
+        break;
+      case 3:
+        // end 
+        icon = null;
+        break;
+      case 1:
+        // pickup
+        icon = {
+          path: 'M0-48c-9.8 0-17.7 7.8-17.7 17.4 0 15.5 17.7 30.6 17.7 30.6s17.7-15.4 17.7-30.6c0-9.6-7.9-17.4-17.7-17.4z',
+          strokeColor: 'blue',
+          fillColor: 'blue',
+          fillOpacity: opacity,
+          scale: 0.5,
+          labelOrigin: new google.maps.Point(0, -25)
+        }
+        break;
+      case 2:
+        // dropoff
+        icon = {
+          path: 'M0-48c-9.8 0-17.7 7.8-17.7 17.4 0 15.5 17.7 30.6 17.7 30.6s17.7-15.4 17.7-30.6c0-9.6-7.9-17.4-17.7-17.4z',
+          strokeColor: 'black',
+          fillColor: 'black',
+          fillOpacity: opacity,
+          scale: 0.5,
+          labelOrigin: new google.maps.Point(0, -25)
+        }
+        break;
+      default:
+        break;
+    }
+
+    return icon;
+  }
+
+  // deprecated
+  // now display pickup/dropoff sequence number
+  function getMarkerLabel(type) {
+    var label;
+    switch(type) {
+      case 0:
+      case 3:
+        label = null;
+        break;
+      case 1:
+        // pickup
+        label = {
+          text: "P",
+          fontWeight: "bold",
+          fontSize: '10px',
+          color: 'white'
+        };
+        break;
+      case 2:
+        // dropoff
+        label = {
+          text: "D",
+          fontWeight: "bold",
+          fontSize: '10px',
+          color: 'white'
+        };
+        break;
+      default:
+        break;
+    }
+
+    return label;
+  }
+
+  // remove stop markers for a run
+  function removeRunStops(run_id) {
+    if(stop_markers[run_id] && stop_markers[run_id].length > 0) {
+      stop_markers[run_id].forEach(function(marker) {
+        if(stopMarkerCluster) {
+          stopMarkerCluster.removeMarker(marker);
+        } else {
+          marker.setMap(null);
+        }
+      });
+
+      delete stop_markers[run_id];
+    }
+  }
+
+  function requestStopInfo(itin_id, callback_when_info_closed) {
+    $.ajax({
+      url: "#{stop_info_cad_path}",
+      data: {
+        itinerary_id: itin_id
+      }
+    }).done(function() {
+      google.maps.event.addListener(infoWindow, 'closeclick', function() {  
+        callback_when_info_closed();
+      });
+    });
+  }
+
+  function zoomToRun(run_id) {
+    $.ajax({
+      url: "#{zoom_to_run_cad_path}",
+      data: {
+        run_id: run_id
+      }
+    });
+  }
+
+  function hoverStop(lat, lng, leg_flag) {
+    if(!lat || !lng) {
+      return;
+    } 
+
+    exitHoverStop();
+
+    stopHoverMarker = new google.maps.Marker({
+      map: map,
+      icon: getIcon(leg_flag, 1),
+      animation: google.maps.Animation.BOUNCE,
+      position: {lat: lat, lng: lng}
+    });
+    
+  }
+
+  function exitHoverStop() {
+    if(stopHoverMarker) {
+      stopHoverMarker.setMap(null);
+    }
+  }
