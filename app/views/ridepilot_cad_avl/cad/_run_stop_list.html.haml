@@ -17,7 +17,24 @@
       - if itin.is_pickup? || itin.is_dropoff?
         - stop_counter += 1
         - stop_label = "#{stop_counter}. #{itin.label}"
+        -# TODO:
+        -# Highlight runs with colors depending on the punctuality, use color code on reports
+        - trip = itin.trip
+        - pickup_time = trip.pickup_time.try(:to_s,:time_only)
+        - dropdoff_time = trip.appointment_time.try(:to_s,:time_only)
+        - pickup_time_actual = trip.pickup_time_actual.present? ? trip.pickup_time_actual.try(:to_s,:time_only) : "none"
+        - dropdoff_time_actual = trip.appointment_time_actual.present? ? trip.appointment_time_actual.try(:to_s,:time_only) : "none"
+        - pickup_geofence = trip.try(:geofence_pickup)
+        - dropoff_geofence = trip.try(:geofence_dropoff)
+        -# Show actual time if the run state is complete else shown scheduled times
+        - if run.state.eql? "complete"
+          - stops = itin.is_pickup? ? stop_counter.to_s + ". Depart - " + pickup_geofence + " - " + pickup_time_actual : stop_counter.to_s + ". Arrive - " + dropoff_geofence + " - " + dropdoff_time_actual
+        - else
+          - stops = itin.is_pickup? ? stop_counter.to_s + ". Depart - " + pickup_geofence + " - " + pickup_time : stop_counter.to_s + ". Arrive - " + dropoff_geofence + " - " + dropdoff_time
+      - else
+        - stops = stop_counter == 0 ? "Start" : "End"
       - is_active = has_active_itin && !itin.finish_time    
       %li.run_stop{data: {itinerary_id: itin.id,  leg_flag: itin.leg_flag, latitude: itin.address.try(:latitude), longitude: itin.address.try(:longitude)}, class: (!active_itin_found && is_active ? "active_run_stop" : "")}
-        = stop_label
+        -#= stop_label
+        = stops
       - active_itin_found = true if is_active

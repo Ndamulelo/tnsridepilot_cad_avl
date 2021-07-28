@@ -15,9 +15,9 @@
     %span.run_list{data: {run_id: run.id, read_message_id: read_message_id, last_message_id: last_message_id}, class: (is_active ? "is_active" : "")}
       %input{type: 'checkbox', data: {run_id: run.id, driver_id: run.driver_id}}
         - if is_active
-          %b= run.name
+          %b= "#{run.name} - #{run.scheduled_start_time.try(:to_s,:time_only)}"
         - else
-          = run.name
+          = "#{run.name} - #{run.scheduled_start_time.try(:to_s,:time_only)}"
 
       - run_expanded = expanded_run_id && expanded_run_id.to_i == run.id
       - if run_expanded
