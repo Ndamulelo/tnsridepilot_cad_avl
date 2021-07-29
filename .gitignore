@@ -9,3 +9,6 @@ spec/dummy/.sass-cache
 spec/DS_Store
 .byebug_history
 .DS_Store
+
+# Ignore visual code generated files
+.idea

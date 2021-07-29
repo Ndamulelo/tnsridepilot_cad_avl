@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>
-    <%= content_for?(:title) ? yield(:title) : translate_helper("application_title") %>
+    <%= content_for?(:title) ? yield(:title) : "TNS Scheduler CAD/AVL" %>
   </title>
   <link href="https://fonts.googleapis.com/css?family=Barlow:400,400i,600,600i,800&amp;subset=latin-ext" rel="stylesheet">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
@@ -23,7 +23,7 @@
     <span id="brand">
       <span class="name">
         <a href='/'>
-         <%= translate_helper("site_title") %>
+         <%= "TNS Scheduler" %>
         </a>
         <span style="font-weight: normal;"><%= translate_helper("application_cad_link_text") %></span>
       </span>

@@ -20,16 +20,21 @@
     var run_id = itin_data[3];
     var leg_flag = itin_data[4];
     var stats_code = itin_data[5];
+    var geofence_pickup = itin_data[6]
+    var geofence_dropoff = itin_data[7]
 
     if(lat == null || lng == null) {
       return;
     }
 
     // define marker 
+    var stop = leg_flag == 1 ? geofence_pickup.toString() : geofence_dropoff.toString();
+  
     var markerLabel = null;
+
     if(seq_number != null) {
       markerLabel = {
-        text: seq_number.toString(),
+        text: stop,
         fontWeight: "bold",
         fontSize: '12px',
         color: 'white'
@@ -72,7 +77,7 @@
       new google.maps.event.trigger( marker, 'spider_click' );
     }
   }
-
+  // End drawing run stop
   function getIcon(type, opacity) {
     var icon;
     switch(type) {
