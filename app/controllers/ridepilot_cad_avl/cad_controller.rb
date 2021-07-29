@@ -105,17 +105,20 @@ module RidepilotCadAvl
           inner join public_itineraries on public_itineraries.run_id = runs.id 
           inner join itineraries on public_itineraries.itinerary_id = itineraries.id 
           inner join addresses on itineraries.address_id = addresses.id
+          inner join trips on itineraries.trip_id = trips.id
           ").order("public_itineraries.sequence")
         .where.not(itineraries: {id: exclude_leg_ids})
-
+      
       @itins_data = query_stops
         .pluck(
           "itineraries.id",
           "ST_Y(addresses.the_geom::geometry) as longitude",
           "ST_X(addresses.the_geom::geometry) as latitude",
-          "itineraries.run_id", 
+          "itineraries.run_id",
           :leg_flag, 
-          :status_code
+          :status_code,
+          "trips.geofence_pickup as geofence_pickup", 
+          "trips.geofence_dropoff as geofence_dropoff",
         )
     end
 

@@ -1,3 +1,4 @@
+-# Marking stops on the map
 - unless @itins_data.blank?
   var run_ids = #{(@run_ids || []).to_json.html_safe};
   run_ids.forEach(function(run_id) { removeRunStops(run_id); });
@@ -7,9 +8,11 @@
   itins_data.forEach(function(itin_data) { 
   var seq_number = null;
   var itin_type = itin_data[4];
-  if(itin_type == 1 || itin_type == 2) {
+  // TODO: Work on the code for marking the last stop on the map
+  if(itin_type == 1) {
   idx ++;
   seq_number = idx;
+  drawRunStop(itin_data, seq_number);
   }
-  drawRunStop(itin_data, seq_number); 
+   
   });
