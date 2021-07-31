@@ -79,7 +79,9 @@
             - elsif itin.status_code == Itinerary::STATUS_OTHER
               %label.label.label-danger No Show
           - else
-            %b ETA: 
-            = public_itin.eta ? format_time_for_listing(public_itin.eta) : 'N/A'
-      
+            %b Actual Time: 
+            - if itin.is_pickup?
+              = itin.trip.pickup_time_actual.present? ? format_time_for_listing(itin.trip.pickup_time_actual) : 'N/A'
+            - elsif itin.is_dropoff?
+              = itin.trip.appointment_time_actual.present? ? format_time_for_listing(itin.trip.appointment_time_actual) : 'N/A'
 
