@@ -28,7 +28,7 @@
         - dropoff_geofence = trip.try(:geofence_dropoff)
         -# Show actual time if the run state is complete else shown scheduled times
         - if run.state.eql? "complete"
-          - stops = itin.is_pickup? ? stop_counter.to_s + ". Depart - " + pickup_geofence + " - " + pickup_time_actual : stop_counter.to_s + ". Arrive - " + dropoff_geofence + " - " + dropdoff_time_actual
+          - stops = itin.is_pickup? ? stop_counter.to_s + ". Depart - " + pickup_geofence + " - " + pickup_time + " - " + pickup_time_actual : stop_counter.to_s + ". Arrive - " + dropoff_geofence + " - " + dropdoff_time + " - " + dropdoff_time_actual
         - else
           - stops = itin.is_pickup? ? stop_counter.to_s + ". Depart - " + pickup_geofence + " - " + pickup_time : stop_counter.to_s + ". Arrive - " + dropoff_geofence + " - " + dropdoff_time
       - else
