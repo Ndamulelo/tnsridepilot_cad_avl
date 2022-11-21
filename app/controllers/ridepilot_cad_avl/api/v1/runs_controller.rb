@@ -20,12 +20,28 @@ module RidepilotCadAvl
     # Start run
     def start
       @run = Run.find_by_id(params[:id])
-      
+      logger = Rails.logger
+      logger.debug "DebugApi: => params => Started => Run Id: #{params[:id]} => Run name #{@run.name}}"
+      itins = Itinerary.where("run_id = ? AND leg_flag != ? AND leg_flag != ?",params[:id],0,3)
+
+      itins.each do |itin|
+        logger.debug "DebugApi: => Start processing Itin #{itin.attributes['id']}"
+        # retrieve each utin object and update 
+        itin_object = Itinerary.find(itin.attributes['id'])
+        itin_object.status_code = 2
+        if itin_object.save(validate: false)
+          logger.debug "DebugApi: => Itin => #{itin_object} successfully updated"
+        else
+          logger.debug "DebugApi: => Itin => #{itin_object} could not be updated"
+        end
+      end
+
       if @run
         @run.driver_notes = params[:driver_notes]
         @run.start_odometer = params[:start_odometer]
         current_time = DateTime.current
         @run.actual_start_time = current_time
+        @run.state = 'driver_started'
         @run.save(validate: false)
 
         unless params[:inspections].blank?
@@ -51,6 +67,7 @@ module RidepilotCadAvl
         @run.end_odometer = params[:end_odometer]
         current_time = DateTime.current
         @run.actual_end_time = current_time
+        @run.state = 'driver_ended'
         @run.save(validate: false)
 
         # end leg completed
@@ -155,6 +172,12 @@ module RidepilotCadAvl
 
     def address_params
       params.required(:address).permit(:address, :city, :state, :zip)
+    end
+
+    # Ndamu
+    def trip_itins
+      @run = Run.find_by_id(560)
+      render success_response(@runs)
     end
   end  
 end
